@@ -6,7 +6,7 @@
 require(lattice)
 
 # N stations in R2:
-N <- 25
+NStations <- 25
 lon <- runif(N, 0, 10) +1
 lat <- runif(N, 0, 10) +1
 # elevation increase that is linear in lat, quadratic in lon
@@ -37,13 +37,30 @@ prTrip <- function(dist, elevDelta){
   out
 }
 
-start <- sample(1:N, 1)
-goal <- sample((1:N)[-start], 1)
-dist <- sqrt((lon[start]-lon[goal])^2 + (lat[start]-lat[goal])^2)
-points(lon[start], lat[start], col="green")
-points(lon[goal], lat[goal], col="magenta")
-elevDelta <- elev[goal] - elev[start]
+tripData <- matrix(0, nrow=NStations, ncol=NStations)
+NTrips <- 1000
 
+for(i in 1:NTrips){
+  start <- sample(1:N, 1)
+  goal <- sample((1:N)[-start], 1)
+  dist <- sqrt((lon[start]-lon[goal])^2 + (lat[start]-lat[goal])^2)
+  points(lon[start], lat[start], col="green")
+  points(lon[goal], lat[goal], col="magenta")
+  elevDelta <- elev[goal] - elev[start]
+  pTrip <- prTrip(dist, elevDelta)
+  tripBinary <- rbinom(1, 1, pTrip)
+  tripData[start, goal] <- tripData[start, goal] + tripBinary
+}
+
+diffs <- NULL
+for(i in 1:nrow(tripData)){
+  for(j in 1:ncol(tripData)){
+    if(i>j){
+      diffs <- c(diffs, tripData[i,j] - tripData[j,i])
+    }
+  }
+}
+hist(diffs)
 
 
 
